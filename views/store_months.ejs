@@ -1,0 +1,23 @@
+<%- include('partials/header', { title }) %>
+<%
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const now = new Date();
+  const thisYear = now.getFullYear();
+  const thisMonth = now.getMonth() + 1;
+%>
+<nav class="crumbs"><a href="/">Stores</a> / <%= store.platform %>: <%= store.name %></nav>
+<h1><%= store.name %></h1>
+
+<div class="yearbar">
+  <a href="/stores/<%= store.id %>?year=<%= year - 1 %>">‹ <%= year - 1 %></a>
+  <span class="current"><%= year %></span>
+  <a href="/stores/<%= store.id %>?year=<%= year + 1 %>"><%= year + 1 %> ›</a>
+</div>
+
+<div class="month-grid">
+  <% MONTHS.forEach(function (name, i) {
+       const m = year + '-' + String(i + 1).padStart(2, '0'); %>
+    <a class="month<%= (year === thisYear && i + 1 === thisMonth) ? ' now' : '' %>" href="/stores/<%= store.id %>/orders?month=<%= m %>"><%= name %></a>
+  <% }) %>
+</div>
+<%- include('partials/footer') %>

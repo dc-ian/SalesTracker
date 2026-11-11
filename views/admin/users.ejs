@@ -1,0 +1,30 @@
+<%- include('../partials/header', { title }) %>
+<h1>Users</h1>
+<h2>Add user</h2>
+<form method="post" action="/admin/users" class="grid-row">
+  <%- include('../partials/csrf') %>
+  <input name="username" placeholder="Username" autocomplete="off" required>
+  <input name="display_name" placeholder="Display name" required>
+  <select name="role">
+    <% roles.forEach(function (r) { %><option value="<%= r %>"><%= r %></option><% }) %>
+  </select>
+  <input type="password" name="password" placeholder="Password (8+ chars)" autocomplete="new-password" required>
+  <button class="btn primary">Add</button>
+</form>
+
+<h2>All users</h2>
+<% users.forEach(function (u) { %>
+  <form method="post" action="/admin/users/<%= u.id %>" class="grid-row">
+    <%- include('../partials/csrf') %>
+    <strong><%= u.username %></strong>
+    <input name="display_name" value="<%= u.display_name %>" required>
+    <select name="role">
+      <% roles.forEach(function (r) { %><option value="<%= r %>" <%= u.role === r ? 'selected' : '' %>><%= r %></option><% }) %>
+    </select>
+    <input type="password" name="password" placeholder="New password (optional)" autocomplete="new-password">
+    <label class="check"><input type="checkbox" name="is_active" value="1" <%= u.is_active ? 'checked' : '' %>> Active</label>
+    <button class="btn small">Save</button>
+  </form>
+<% }) %>
+<p class="muted">Users are deactivated, never deleted, so the audit trail stays intact. You cannot demote or deactivate yourself or the last active administrator.</p>
+<%- include('../partials/footer') %>

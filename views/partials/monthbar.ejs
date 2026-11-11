@@ -1,0 +1,11 @@
+<%# locals: base (path), month, prev, next, extra (optional query string like "&store=2") %>
+<div class="monthbar">
+  <a class="btn" href="<%= base %>?month=<%= prev %><%= locals.extra || '' %>" title="Previous month">‹</a>
+  <form method="get" action="<%= base %>" class="inline">
+    <input type="month" name="month" value="<%= month %>" data-autosubmit>
+    <% if (locals.hidden) { Object.keys(hidden).forEach(function (k) { %>
+      <input type="hidden" name="<%= k %>" value="<%= hidden[k] %>">
+    <% }) } %>
+  </form>
+  <a class="btn" href="<%= base %>?month=<%= next %><%= locals.extra || '' %>" title="Next month">›</a>
+</div>

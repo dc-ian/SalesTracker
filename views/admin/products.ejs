@@ -1,0 +1,24 @@
+<%- include('../partials/header', { title }) %>
+<h1>Products</h1>
+<h2>Add product</h2>
+<form method="post" action="/admin/products" class="grid-row">
+  <%- include('../partials/csrf') %>
+  <input name="sku" placeholder="SKU" required>
+  <input name="name" placeholder="Name" required>
+  <input name="price" placeholder="Price e.g. 12.50" inputmode="decimal" required>
+  <button class="btn primary">Add</button>
+</form>
+
+<h2>All products</h2>
+<% products.forEach(function (p) { %>
+  <form method="post" action="/admin/products/<%= p.id %>" class="grid-row">
+    <%- include('../partials/csrf') %>
+    <input name="sku" value="<%= p.sku %>" required>
+    <input name="name" value="<%= p.name %>" required>
+    <input name="price" value="<%= money(p.unit_price_cents) %>" inputmode="decimal" required>
+    <label class="check"><input type="checkbox" name="is_active" value="1" <%= p.is_active ? 'checked' : '' %>> Active</label>
+    <button class="btn small">Save</button>
+  </form>
+<% }) %>
+<p class="muted">Changing a price affects new orders only; existing order lines keep the price they were entered at.</p>
+<%- include('../partials/footer') %>

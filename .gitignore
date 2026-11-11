@@ -1,0 +1,44 @@
+# Whitelist: ignore everything at the top level except the project itself
+/*
+!/server/
+!/views/
+!/public/
+!/electron/
+!/scripts/
+!/package.json
+!/README.md
+!/.gitignore
+!/.env.example
+
+# Dependencies
+node_modules/
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Local data
+*.db
+*.db-wal
+*.db-shm
+data/
+
+# Build output
+dist/
+out/
+
+# Logs / OS / editor
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+node_modules/
+.env
+*.db
+*.db-journal
+dist/
+out/

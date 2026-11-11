@@ -1,0 +1,36 @@
+<%- include('partials/header', { title }) %>
+<h1>Fix requests</h1>
+<% if (requests.length === 0) { %>
+  <p class="muted">Nothing here yet.</p>
+<% } else { %>
+<table>
+  <thead><tr><th>Order</th><th>Store</th><th>From</th><th>Request</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% requests.forEach(function (r) { %>
+      <tr>
+        <td><a href="/orders/<%= r.order_id %>">#<%= r.order_id %></a><br><span class="muted"><%= r.order_date %></span></td>
+        <td><%= r.store_name %></td>
+        <td><%= r.requested_by_name %><br><span class="muted"><%= r.created_at %> UTC</span></td>
+        <td><%= r.message %>
+          <% if (r.status !== 'open' && r.resolution_note) { %><br><em class="muted"><%= r.resolution_note %></em><% } %></td>
+        <td><span class="chip <%= r.status %>"><%= r.status %></span>
+          <% if (r.status !== 'open') { %><br><span class="muted"><%= r.resolved_by_name || '' %></span><% } %></td>
+        <td>
+          <% if (r.status === 'open' && can('EDIT_DELETE_ORDER')) { %>
+            <form method="post" action="/fix-requests/<%= r.id %>/resolve" class="stack compact">
+              <%- include('partials/csrf') %>
+              <input name="note" placeholder="Note (optional)" maxlength="1000">
+              <div>
+                <button class="btn small primary" name="decision" value="resolved">Resolve</button>
+                <button class="btn small" name="decision" value="rejected">Reject</button>
+              </div>
+            </form>
+          <% } %>
+        </td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+<p class="muted">To act on a request, unapprove the order, edit it, then approve it again; then mark the request resolved.</p>
+<% } %>
+<%- include('partials/footer') %>

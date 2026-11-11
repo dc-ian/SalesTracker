@@ -1,0 +1,15 @@
+<%# locals: row ({product_id, quantity, unit_price_cents}), products %>
+<tr class="line" data-cents="<%= row.unit_price_cents == null ? '' : row.unit_price_cents %>">
+  <td>
+    <select name="product_id">
+      <option value="">— choose product —</option>
+      <% products.forEach(function (p) { %>
+        <option value="<%= p.id %>" data-price="<%= p.unit_price_cents %>" <%= String(row.product_id) === String(p.id) ? 'selected' : '' %>><%= p.sku %> — <%= p.name %></option>
+      <% }) %>
+    </select>
+  </td>
+  <td><input type="number" name="quantity" min="1" step="1" inputmode="numeric" value="<%= row.quantity %>" class="qty"></td>
+  <td class="num price"><%= row.unit_price_cents == null ? '' : money(row.unit_price_cents) %></td>
+  <td class="num line-total"></td>
+  <td><button type="button" class="link remove-row" title="Remove row">✕</button></td>
+</tr>

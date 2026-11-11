@@ -1,0 +1,71 @@
+<%- include('partials/header', { title }) %>
+<p><a href="/stores/<%= order.store_id %>/orders?month=<%= order.order_date.slice(0, 7) %>">‹ <%= order.store_name %></a></p>
+<div class="titlebar">
+  <h1>Order #<%= order.id %> <span class="chip <%= order.status %>"><%= order.status === 'approved' ? 'Approved · locked' : 'Waiting for approval' %></span></h1>
+  <div class="actions">
+    <% if (order.status === 'pending' && can('APPROVE_UNAPPROVE_ORDER')) { %>
+      <form method="post" action="/orders/<%= order.id %>/approve" class="inline"><%- include('partials/csrf') %><button class="btn primary">Approve</button></form>
+    <% } %>
+    <% if (order.status === 'pending' && can('EDIT_DELETE_ORDER')) { %>
+      <a class="btn" href="/orders/<%= order.id %>/edit">Edit</a>
+      <form method="post" action="/orders/<%= order.id %>/delete" class="inline" data-confirm="Delete this order? This cannot be undone."><%- include('partials/csrf') %><button class="btn danger">Delete</button></form>
+    <% } %>
+    <% if (order.status === 'approved' && can('APPROVE_UNAPPROVE_ORDER')) { %>
+      <form method="post" action="/orders/<%= order.id %>/unapprove" class="inline" data-confirm="Unapprove this order? It will count as waiting again."><%- include('partials/csrf') %><button class="btn">Unapprove</button></form>
+    <% } %>
+  </div>
+</div>
+
+<dl class="meta">
+  <dt>Store</dt><dd><%= order.store_name %></dd>
+  <dt>Order date</dt><dd><%= order.order_date %></dd>
+  <dt>Entered by</dt><dd><%= order.created_by_name %> · <%= order.created_at %> UTC</dd>
+  <% if (order.status === 'approved') { %>
+    <dt>Approved by</dt><dd><%= order.approved_by_name || '—' %> · <%= order.approved_at %> UTC</dd>
+  <% } %>
+  <% if (order.notes) { %><dt>Notes</dt><dd><%= order.notes %></dd><% } %>
+</dl>
+
+<table>
+  <thead><tr><th>SKU</th><th>Product</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Line total</th></tr></thead>
+  <tbody>
+    <% order.lines.forEach(function (l) { %>
+      <tr>
+        <td><%= l.sku %></td><td><%= l.product_name %></td>
+        <td class="num"><%= l.quantity %></td>
+        <td class="num"><%= money(l.unit_price_cents) %></td>
+        <td class="num"><%= money(l.quantity * l.unit_price_cents) %></td>
+      </tr>
+    <% }) %>
+  </tbody>
+  <tfoot><tr><td colspan="4" class="num"><strong>Total</strong></td><td class="num"><strong><%= money(order.total_cents) %></strong></td></tr></tfoot>
+</table>
+
+<h2 id="fix">Fix requests</h2>
+<% if (order.status === 'approved' && can('SUBMIT_FIX_REQUEST')) { %>
+  <form method="post" action="/orders/<%= order.id %>/fix-requests" class="stack">
+    <%- include('partials/csrf') %>
+    <label>This order is locked. Describe what needs to change:
+      <textarea name="message" rows="3" maxlength="2000" required></textarea>
+    </label>
+    <button class="btn primary" type="submit">Send fix request</button>
+  </form>
+<% } else if (order.status === 'pending' && can('SUBMIT_FIX_REQUEST')) { %>
+  <p class="muted">Fix requests can be sent once this order has been approved.</p>
+<% } %>
+
+<% if (fixes.length === 0) { %>
+  <p class="muted">No fix requests for this order.</p>
+<% } else { %>
+  <ul class="plain">
+    <% fixes.forEach(function (f) { %>
+      <li>
+        <span class="chip <%= f.status %>"><%= f.status %></span>
+        <strong><%= f.requested_by_name %></strong> · <%= f.created_at %> UTC<br>
+        <%= f.message %>
+        <% if (f.status !== 'open') { %><br><em class="muted">Closed by <%= f.resolved_by_name || '—' %><%= f.resolution_note ? ': ' + f.resolution_note : '' %></em><% } %>
+      </li>
+    <% }) %>
+  </ul>
+<% } %>
+<%- include('partials/footer') %>

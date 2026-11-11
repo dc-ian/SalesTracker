@@ -1,0 +1,145 @@
+<%- include('partials/header', { title }) %>
+<%
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const parts = month.split('-');
+  const label = MONTHS[Number(parts[1]) - 1] + ' ' + parts[0];
+  const back = '/stores/' + store.id + '/orders?month=' + month;
+  const inp = function (c) { return c == null ? '' : (c / 100).toFixed(2); };
+  const show = function (c) { return c == null ? '' : money(c); };
+  const canCreate = can('CREATE_ORDER') && store.is_active;
+  const canEdit = can('EDIT_DELETE_ORDER');
+  const canApprove = can('APPROVE_UNAPPROVE_ORDER');
+  const editId = editRow ? editRow.id : null;
+%>
+<nav class="crumbs"><a href="/">Stores</a> / <a href="/stores/<%= store.id %>?year=<%= parts[0] %>"><%= store.platform %>: <%= store.name %></a> / <%= label %></nav>
+<h1><%= store.name %>: <%= label %></h1>
+
+<div class="stat-cards">
+  <div class="stat-card"><span>Approved sales</span><strong><%= money(stats.approvedSales) %></strong></div>
+  <div class="stat-card"><span>Orders waiting for approval</span><strong><%= stats.waiting %></strong></div>
+  <div class="stat-card"><span>Units sold (approved)</span><strong><%= stats.units %></strong></div>
+</div>
+
+<% if (canCreate) { %>
+<form id="new-row" method="post" action="/stores/<%= store.id %>/rows">
+  <%- include('partials/csrf') %>
+  <input type="hidden" name="month" value="<%= month %>">
+  <input type="hidden" name="back" value="<%= back %>">
+</form>
+<% } %>
+<% if (editRow) { %>
+<form id="edit-row" method="post" action="/rows/<%= editRow.id %>">
+  <%- include('partials/csrf') %>
+  <input type="hidden" name="back" value="<%= back %>">
+</form>
+<% } %>
+
+<div class="sheet-wrap">
+<table class="sales-sheet">
+  <thead>
+    <tr>
+      <th>No.</th><th>Order number</th><th>Tracking no.</th><th>Product code</th><th>Product name</th>
+      <th class="num">Distributor price</th><th class="num">Qty</th><th class="num">Total</th>
+      <th class="num">Retail price</th><th class="num">Paid by customer</th><th class="num">Received</th><th class="num">Price adjustment</th>
+      <th>Status</th><th>Remarks</th><th>Approved</th><th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% rows.forEach(function (r, i) { %>
+      <% if (r.id === editId) { %>
+      <tr class="entry editing">
+        <td><%= i + 1 %></td>
+        <td><input form="edit-row" name="order_number" value="<%= r.order_number %>" required></td>
+        <td><input form="edit-row" name="tracking_no" value="<%= r.tracking_no || '' %>"></td>
+        <td><input form="edit-row" name="product_code" value="<%= r.product_code || '' %>"></td>
+        <td><input form="edit-row" name="product_name" value="<%= r.product_name %>" required></td>
+        <td class="num"><input form="edit-row" name="distributor_price" inputmode="decimal" value="<%= inp(r.distributor_price_cents) %>"></td>
+        <td class="num"><input form="edit-row" name="qty" type="number" min="1" step="1" value="<%= r.qty %>" class="qty"></td>
+        <td class="num row-total"></td>
+        <td class="num"><input form="edit-row" name="retail_price" inputmode="decimal" value="<%= inp(r.retail_price_cents) %>"></td>
+        <td class="num"><input form="edit-row" name="paid_by_customer" inputmode="decimal" value="<%= inp(r.paid_by_customer_cents) %>"></td>
+        <td class="num"><input form="edit-row" name="received" inputmode="decimal" value="<%= inp(r.received_cents) %>"></td>
+        <td class="num"><input form="edit-row" name="price_adjustment" inputmode="decimal" value="<%= inp(r.price_adjustment_cents) %>"></td>
+        <td><select form="edit-row" name="shipping_status"><% statuses.forEach(function (s) { %><option <%= s === r.shipping_status ? 'selected' : '' %>><%= s %></option><% }) %></select></td>
+        <td><select form="edit-row" name="remarks"><option value=""></option><% remarkOptions.forEach(function (s) { %><option <%= s === r.remarks ? 'selected' : '' %>><%= s %></option><% }) %></select></td>
+        <td>Waiting</td>
+        <td class="actions"><button class="btn small primary" form="edit-row" type="submit">Save</button> <a href="<%= back %>">Cancel</a></td>
+      </tr>
+      <% } else { %>
+      <tr>
+        <td><%= i + 1 %></td>
+        <td><%= r.order_number %></td>
+        <td><%= r.tracking_no || '' %></td>
+        <td><%= r.product_code || '' %></td>
+        <td><%= r.product_name %></td>
+        <td class="num"><%= show(r.distributor_price_cents) %></td>
+        <td class="num"><%= r.qty %></td>
+        <td class="num"><%= money(r.distributor_price_cents * r.qty) %></td>
+        <td class="num"><%= show(r.retail_price_cents) %></td>
+        <td class="num"><%= show(r.paid_by_customer_cents) %></td>
+        <td class="num"><%= show(r.received_cents) %></td>
+        <td class="num"><%= show(r.price_adjustment_cents) %></td>
+        <td><span class="chip <%= String(r.shipping_status).toLowerCase() %>"><%= r.shipping_status %></span></td>
+        <td><%= r.remarks || '' %></td>
+        <td>
+          <% if (r.approved && canApprove) { %>
+            <form method="post" action="/rows/<%= r.id %>/unapprove" class="inline" data-confirm="Unapprove this row? It will count as waiting again.">
+              <%- include('partials/csrf') %><input type="hidden" name="back" value="<%= back %>">
+              <button class="btn small">Approved</button>
+            </form>
+          <% } else if (r.approved) { %>Approved
+          <% } else if (canApprove) { %>
+            <form method="post" action="/rows/<%= r.id %>/approve" class="inline">
+              <%- include('partials/csrf') %><input type="hidden" name="back" value="<%= back %>">
+              <button class="btn small primary">Approve</button>
+            </form>
+          <% } else { %>Waiting<% } %>
+        </td>
+        <td class="actions">
+          <% if (!r.approved && canEdit) { %>
+            <a href="<%= back %>&edit=<%= r.id %>">Edit</a>
+            <form method="post" action="/rows/<%= r.id %>/delete" class="inline" data-confirm="Delete this row? This cannot be undone.">
+              <%- include('partials/csrf') %><input type="hidden" name="back" value="<%= back %>">
+              <button class="btn small danger">Delete</button>
+            </form>
+          <% } %>
+        </td>
+      </tr>
+      <% } %>
+    <% }) %>
+
+    <% if (canCreate) { %>
+    <tr class="entry new">
+      <td>New</td>
+      <td><input form="new-row" name="order_number" placeholder="Order no." required></td>
+      <td><input form="new-row" name="tracking_no" placeholder="Tracking no."></td>
+      <td><input form="new-row" name="product_code" placeholder="Code"></td>
+      <td><input form="new-row" name="product_name" placeholder="Product name" required></td>
+      <td class="num"><input form="new-row" name="distributor_price" inputmode="decimal" placeholder="0.00"></td>
+      <td class="num"><input form="new-row" name="qty" type="number" min="1" step="1" value="1" class="qty"></td>
+      <td class="num row-total">0.00</td>
+      <td class="num"><input form="new-row" name="retail_price" inputmode="decimal"></td>
+      <td class="num"><input form="new-row" name="paid_by_customer" inputmode="decimal"></td>
+      <td class="num"><input form="new-row" name="received" inputmode="decimal"></td>
+      <td class="num"><input form="new-row" name="price_adjustment" inputmode="decimal"></td>
+      <td><select form="new-row" name="shipping_status"><% statuses.forEach(function (s) { %><option><%= s %></option><% }) %></select></td>
+      <td><select form="new-row" name="remarks"><option value=""></option><% remarkOptions.forEach(function (s) { %><option><%= s %></option><% }) %></select></td>
+      <td>Waiting</td>
+      <td class="actions"><button class="btn primary" form="new-row" type="submit">Add row</button></td>
+    </tr>
+    <% } else if (rows.length === 0) { %>
+    <tr><td colspan="16" class="muted">No orders for this month.</td></tr>
+    <% } %>
+  </tbody>
+  <tfoot>
+    <tr><td colspan="7" class="num"><strong>Total (approved)</strong></td><td class="num"><strong><%= money(stats.approvedSales) %></strong></td><td colspan="8"></td></tr>
+    <tr><td colspan="6" class="num"><strong>Total units sold (approved)</strong></td><td class="num"><strong><%= stats.units %></strong></td><td colspan="9"></td></tr>
+  </tfoot>
+</table>
+</div>
+
+<% if (canCreate) { %>
+<p class="muted">Fill in the last row of the table and press Add row. To add another product to the same order, use the same order number.</p>
+<% } %>
+<script src="/js/sales-sheet.js"></script>
+<%- include('partials/footer') %>

@@ -1,0 +1,45 @@
+<%- include('../partials/header', { title }) %>
+<h1>Store list</h1>
+
+<table>
+  <thead>
+    <tr><th>Platform</th><th>Store</th><th>Status</th><th></th></tr>
+  </thead>
+  <tbody>
+    <% stores.forEach(function (s) { %>
+      <tr>
+        <td><%= s.platform %></td>
+        <td><%= s.name %></td>
+        <td><%= s.is_active ? 'Active' : 'Hidden' %></td>
+        <td class="actions">
+          <form method="post" action="/admin/stores/<%= s.id %>" class="inline">
+            <%- include('../partials/csrf') %>
+            <input type="hidden" name="name" value="<%= s.name %>">
+            <input type="hidden" name="platform" value="<%= s.platform %>">
+            <% if (!s.is_active) { %><input type="hidden" name="is_active" value="1"><% } %>
+            <button class="btn small" type="submit"><%= s.is_active ? 'Hide' : 'Show' %></button>
+          </form>
+        </td>
+      </tr>
+    <% }) %>
+    <% if (stores.length === 0) { %>
+      <tr><td colspan="4" class="muted">No stores yet.</td></tr>
+    <% } %>
+  </tbody>
+</table>
+
+<h2>Add a store</h2>
+<form method="post" action="/admin/stores" class="stack">
+  <%- include('../partials/csrf') %>
+  <label>Platform
+    <select name="platform" required>
+      <% platforms.forEach(function (p) { %><option value="<%= p %>"><%= p %></option><% }) %>
+    </select>
+  </label>
+  <label>Store name
+    <input name="name" required maxlength="200" autocomplete="off">
+  </label>
+  <button class="btn primary" type="submit">Add store</button>
+</form>
+<p class="muted">Hidden stores disappear from the dashboard but keep their order history.</p>
+<%- include('../partials/footer') %>

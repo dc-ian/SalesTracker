@@ -1,0 +1,29 @@
+<%- include('partials/header', { title }) %>
+<h1>Choose a store</h1>
+
+<%
+  // Always show the three platform columns, in this order.
+  const PLATFORMS = ['Lazada', 'Shopee', 'TikTok'];
+  const groups = {};
+  PLATFORMS.forEach(function (p) { groups[p] = []; });
+  cards.forEach(function (s) {
+    const key = PLATFORMS.indexOf(s.platform) >= 0 ? s.platform : 'Lazada';
+    groups[key].push(s);
+  });
+%>
+<div class="platforms" id="store-cards" data-month="<%= month %>">
+  <% Object.keys(groups).forEach(function (platform) { %>
+    <section class="platform">
+      <h2><%= platform %></h2>
+      <% if (groups[platform].length === 0) { %><p class="empty muted">No stores yet.</p><% } %>
+      <% groups[platform].forEach(function (s) { %>
+        <a class="card store-row" href="/stores/<%= s.id %>">
+          <span class="store-main"><strong><%= s.name %></strong></span>
+          <span class="badge" data-badge-store="<%= s.id %>" <%= s.waiting ? '' : 'hidden' %>><%= s.waiting %> waiting</span>
+        </a>
+      <% }) %>
+    </section>
+  <% }) %>
+</div>
+<script src="/js/dashboard.js"></script>
+<%- include('partials/footer') %>

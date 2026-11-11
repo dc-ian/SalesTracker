@@ -1,0 +1,40 @@
+<%- include('partials/header', { title }) %>
+<p><a href="<%= order ? '/orders/' + order.id : '/stores/' + store.id + '/orders' %>">‹ Back</a></p>
+<h1><%= order ? 'Edit order #' + order.id : 'New order' %> — <%= store.name %></h1>
+<% if (error) { %><div class="alert error"><%= error %></div><% } %>
+
+<form method="post" action="<%= formAction %>" id="order-form">
+  <%- include('partials/csrf') %>
+  <div class="row-fields">
+    <label>Order date <input type="date" name="order_date" value="<%= orderDate %>" required></label>
+    <label class="grow">Notes <input type="text" name="notes" maxlength="1000" value="<%= notes %>"></label>
+  </div>
+
+  <p class="muted">All lines below are saved together under one order number. Choosing a product fills in its price; blank rows are ignored.</p>
+
+  <table class="sheet">
+    <thead><tr><th>Product</th><th>Quantity</th><th class="num">Unit price</th><th class="num">Line total</th><th></th></tr></thead>
+    <tbody id="lines">
+      <% rows.forEach(function (row) { %>
+        <%- include('partials/order_row', { row: row, products: products }) %>
+      <% }) %>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td><button type="button" class="btn small" id="add-row">+ Add row</button></td>
+        <td></td>
+        <td class="num"><strong>Order total</strong></td>
+        <td class="num"><strong id="order-total">0.00</strong></td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <template id="line-template">
+    <%- include('partials/order_row', { row: { product_id: '', quantity: '', unit_price_cents: null }, products: products }) %>
+  </template>
+
+  <button class="btn primary" type="submit"><%= order ? 'Save changes' : 'Save order' %></button>
+</form>
+<script src="/js/order-sheet.js"></script>
+<%- include('partials/footer') %>
